@@ -1,14 +1,11 @@
 import React, { useState, useEffect, useRef } from "react";
 import { createClient } from "@supabase/supabase-js";
-import moment from "moment";
 import "moment/locale/fr";
 import "./index.css";
-import Select from "react-select";
 import Cropper from "react-cropper";
 import "cropperjs/dist/cropper.css";
 import { ArrowForwardIcon, ArrowBackIcon } from "@chakra-ui/icons";
 import { v4 as uuidv4 } from "uuid";
-import UploadPhotos from "./UploadPhotos";
 import { toast } from "react-toastify";
 import { AiOutlineFileAdd } from "react-icons/ai";
 import {
@@ -22,16 +19,7 @@ import {
   Button,
   Flex,
   Icon,
-  ButtonGroup,
-  Center,
-  InputGroup,
   FormLabel,
-  InputRightAddon,
-  InputLeftAddon,
-  Textarea,
-  NumberInput,
-  NumberInputField,
-  FormErrorMessage,
   Alert,
   AlertIcon,
   AlertTitle,
@@ -39,23 +27,8 @@ import {
 } from "@chakra-ui/react";
 
 import "react-datepicker/dist/react-datepicker.css";
-
 import { IoDocumentAttachOutline } from "react-icons/io5";
-import { FaRegHospital } from "react-icons/fa";
-import { MdOutgoingMail } from "react-icons/md";
-import { RiTestTubeLine } from "react-icons/ri";
-import { FaVial } from "react-icons/fa";
-import { CiPillsBottle1 } from "react-icons/ci";
-import { FaPrescriptionBottleAlt } from "react-icons/fa";
-import { GiMasonJar } from "react-icons/gi";
-import { LuSyringe } from "react-icons/lu";
-import { GiCorkedTube } from "react-icons/gi";
 
-const tubeIcons = {
-  
-};
-
-// Create Supabase client
 const supabaseUrl = "https://nhrsgicthwqsctwggxqz.supabase.co";
 const supabaseKey =
   "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Im5ocnNnaWN0aHdxc2N0d2dneHF6Iiwicm9sZSI6ImFub24iLCJpYXQiOjE2ODkxNzMwODMsImV4cCI6MjAwNDc0OTA4M30.f1MhR4nYjFrCMjMnwjMUwlueADL8wZdPvu4MtrxPglk";
@@ -209,91 +182,15 @@ const PhotoRecadree = () => {
   const [userId, setUserId] = useState(null);
   const [uploadedImages, setUploadedImages] = useState([]);
   const uploadPhotosRef = useRef(null);
-  const [selectedExam, setSelectedExam] = useState("");
-  const [status, setStatus] = useState("");
-  const [familyDoctor, setFamilyDoctor] = useState({
-    firstName: "",
-    lastName: "",
-  });
-  const [charge, setCharge] = useState("Laboratoire 2");
-  const [selectedComment, setSelectedComment] = useState("");
-  const [transmission, setTransmission] = useState("Internet");
-  const [selectedFreeComment, setSelectedFreeComment] = useState("");
-  const [distanceParcourue, setDistanceParcourue] = useState(0);
-
-  const [tubes, setTubes] = useState([
-    { name: "Tube héparine avec gel (Vert)", count: 0 },
-    { name: "Flacon pot bouchon rouge stérile", count: 0 },
-    { name: "Tube EDTA (Violet)", count: 0 },
-    { name: "Tube beige (Urine)", count: 0 },
-    { name: "Tube sec gel (Jaune)", count: 0 },
-    { name: "Tube citrate (Bleu)", count: 0 },
-    { name: "Tube fluorure (Gris)", count: 0 },
-    { name: "Flacon échantillon urine", count: 0 },
-    { name: "Milieu Anapath", count: 0 },
-    { name: "Seringue gaz du sang", count: 0 },
-    { name: "Eswab (Orange)", count: 0 },
-    { name: "Eswab (Rose)", count: 0 },
-    // ...and so on for each tube type
-  ]);
-  const AVK_OPTIONS = [
-    { value: "previscan", label: "Previscan (Fluindione)" },
-    { value: "coumadine", label: "Coumadine (Warfarine)" },
-    { value: "sintrom", label: "Sintrom (Acenocoumarol)" },
-    { value: "mini-sintrom", label: "Mini-Sintrom (Acenocoumarol)" },
-  ];
-  const OTHER_MED_OPTIONS = [
-    { value: "levothyrox", label: "Levothyrox" },
-    { value: "digoxine", label: "Digoxine" },
-    { value: "tegretol", label: "Tegretol" },
-    { value: "eliquis", label: "Eliquis" },
-    { value: "pradaxa", label: "Pradaxa" },
-    { value: "xarelto", label: "Xarelto" },
-    { value: "lovenox", label: "Lovenox" },
-    { value: "innohep", label: "Innohep" },
-    { value: "fraxiparine", label: "Fraxiparine" },
-    // add more options here if needed
-  ];
-  const COMMENT_OPTIONS = [
-    { value: "Ordonnance au laboratoire", label: "Ordonnance au laboratoire" },
-    { value: "Prélèvement sans garrot", label: "Prélèvement sans garrot" },
-    {
-      value: "Patient difficile à prélever",
-      label: "Patient difficile à prélever",
-    },
-    {
-      value: "Prélèvement suite à une non-conformité",
-      label: "Prélèvement suite à une non-conformité",
-    },
-    // Add other options as needed
-  ];
 
   useEffect(() => {
     if (newPatient) {
-      // You can add a delay here using setTimeout if you want
       setTimeout(() => {
         setPatient(newPatient);
       }, 10);
     }
   }, [newPatient]);
 
-  const [delay, setDelay] = useState("Délai résultat normal");
-  const chargeOptions = [
-    { value: "Laboratoire 1", label: "Laboratoire 1" },
-    { value: "Laboratoire 2", label: "Laboratoire 2" },
-    { value: "Laboratoire 3", label: "Laboratoire 3" },
-  ];
-  const [urgentComment, setUrgentComment] = useState("");
-  const [selectedAVKOption, setSelectedAVKOption] = useState(
-    AVK_OPTIONS[0].value
-  );
-  const [selectedOtherMedOption, setSelectedOtherMedOption] = useState(
-    OTHER_MED_OPTIONS[0].value
-  );
-  const [posologieValue, setPosologieValue] = useState("");
-  const [tubesError, setTubesError] = useState(false);
-
-  // Fetch the user session and set it in state using useEffect
   useEffect(() => {
     const fetchSession = async () => {
       const { data, error } = await supabase.auth.refreshSession();
@@ -316,56 +213,12 @@ const PhotoRecadree = () => {
   const handleSubmit = async (event) => {
     event.preventDefault();
 
-    // Check if there are any tubes selected
-    const hasTubes = tubes.some((tube) => tube.count > 0);
-    if (!hasTubes) {
-      setTubesError(true);
-      return;
-    }
-    setTubesError(false);
 
     try {
-      // Prepare tube counts object
-      const tubeCounts = {};
-      tubes.forEach((tube) => {
-        tubeCounts[tube.name] = tube.count;
-      });
 
       // Prepare the rest of the form data
       let formData = {
         patient_id: patient.id,
-        family_doctor: `${familyDoctor.firstName} ${familyDoctor.lastName}`,
-        status: status,
-        charge: charge,
-        transmission: transmission,
-        delay: delay,
-        urgent_comment: urgentComment,
-        weight: weight,
-        height: height,
-        last_period: lastPeriod,
-        pregnancy_start_date: pregnancyStartDate,
-        last_time_taken: lastTimeTaken,
-        selected_exam: selectedExam,
-        selected_comment: selectedComment,
-        free_comment: selectedFreeComment,
-        avk_option: selectedAVKOption,
-        other_med_option: selectedOtherMedOption,
-        posologie: posologieValue,
-        distance_parcourue: distanceParcourue,
-        tube_heparine_avec_gel_vert_count:
-          tubeCounts["Tube héparine avec gel (Vert)"],
-        flacon_pot_bouchon_rouge_sterile_count:
-          tubeCounts["Flacon pot bouchon rouge stérile"],
-        tube_edta_violet_count: tubeCounts["Tube EDTA (Violet)"],
-        tube_beige_urine_count: tubeCounts["Tube beige (Urine)"],
-        tube_sec_gel_jaune_count: tubeCounts["Tube sec gel (Jaune)"],
-        tube_citrate_bleu_count: tubeCounts["Tube citrate (Bleu)"],
-        tube_fluorure_gris_count: tubeCounts["Tube fluorure (Gris)"],
-        flacon_echantillon_urine_count: tubeCounts["Flacon échantillon urine"],
-        milieu_anapath_count: tubeCounts["Milieu Anapath"],
-        seringue_gaz_du_sang_count: tubeCounts["Seringue gaz du sang"],
-        eswab_orange_count: tubeCounts["Eswab (Orange)"],
-        eswab_rose_count: tubeCounts["Eswab (Rose)"],
         user_id: userId,
       };
 
@@ -424,12 +277,6 @@ const PhotoRecadree = () => {
     setTriggerUpload(true);
   };
 
-  const [weight, setWeight] = useState();
-  const [height, setHeight] = useState();
-  const [lastPeriod, setLastPeriod] = useState(null);
-  const [pregnancyStartDate, setPregnancyStartDate] = useState(null);
-
-  const [lastTimeTaken, setLastTimeTaken] = useState(null);
   const [formSubmitted, setFormSubmitted] = useState(false);
 
   const [exams, setExams] = useState([]);
