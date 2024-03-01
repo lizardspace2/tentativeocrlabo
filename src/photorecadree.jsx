@@ -37,16 +37,9 @@ import {
   AlertTitle,
   AlertDescription,
 } from "@chakra-ui/react";
-import { BiCommentAdd } from "react-icons/bi";
-import { RiBillLine } from "react-icons/ri";
-import { fr } from "date-fns/locale";
-import { FaWeight, FaBriefcaseMedical, FaMicroscope } from "react-icons/fa";
-import DatePicker from "react-datepicker";
+
 import "react-datepicker/dist/react-datepicker.css";
-import { HStack } from "@chakra-ui/react";
-import { FcBusinessman, FcBusinesswoman } from "react-icons/fc";
-import { BsCapsule } from "react-icons/bs";
-import { AiOutlineMinusCircle, AiOutlinePlusCircle } from "react-icons/ai";
+
 import { IoDocumentAttachOutline } from "react-icons/io5";
 import { FaRegHospital } from "react-icons/fa";
 import { MdOutgoingMail } from "react-icons/md";
