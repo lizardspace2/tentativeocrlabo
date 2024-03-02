@@ -213,7 +213,7 @@ const PhotoRecadree = () => {
   const handleSubmit = async (event) => {
     event.preventDefault();
 
-
+  
     try {
 
       // Prepare the rest of the form data
@@ -254,52 +254,37 @@ const PhotoRecadree = () => {
       }
 
       const { data: patientRecord, error: insertError } = await supabase
-        .from("patient_records")
-        .insert([formData]);
-
-      if (insertError) {
-        throw insertError; // Handle the error appropriately
+          .from("patient_records")
+          .insert([formData]);
+  
+        if (insertError) {
+          throw insertError; // Handle the error appropriately
       }
 
       console.log("Patient Record Added: ", patientRecord);
-
+  
       setFormSubmitted(true);
       setTimeout(() => {
         window.location.reload(); // Reload or redirect as needed
       }, 20000);
     } catch (error) {
       console.error("Error in form submission: ", error);
-      // Handle submission errors appropriately
+// Handle submission errors appropriately
       if (uploadPhotosRef.current) {
         await uploadPhotosRef.current.uploadFiles(); // Trigger the upload process
       }
     }
     setTriggerUpload(true);
   };
+  
+    const [formSubmitted, setFormSubmitted] = useState(false);
 
-  const [formSubmitted, setFormSubmitted] = useState(false);
 
-  const [exams, setExams] = useState([]);
 
-  useEffect(() => {
-    fetchExams();
-  }, []);
 
-  const fetchExams = async () => {
-    let { data: exams, error } = await supabase.from("exams").select("*");
-    if (error) console.log("Error fetching data: ", error);
-    else setExams(exams);
-  };
 
-  const [ordonnanceData, setOrdonnanceData] = useState({
-    patient_name: "",
-    ordonnance_date: "",
-    usage_remaining: "",
-    valid_until: "",
-    file_url: "",
-    first_name: "",
-    date_of_birth: "",
-  });
+
+
   const [currentStep, setCurrentStep] = useState(1);
   const [croppedImage, setCroppedImage] = useState(null);
   const [setFileUploadError] = useState(null);
@@ -317,7 +302,7 @@ const PhotoRecadree = () => {
       const imageUrl = await handleFileUpload(croppedImage);
 
       // Insert data into the database with the new column
-      const { error: insertError } = await supabase.from("ordonnances").insert({
+      const { error: insertError } = await supabase.from("ocrbucket_table").insert({
         ...ordonnanceData,
         file_url: imageUrl, // New file_url field
         // Add other fields as needed
@@ -330,10 +315,6 @@ const PhotoRecadree = () => {
 
       // Reset the form and state
       setOrdonnanceData({
-        patient_name: "",
-        ordonnance_date: "",
-        usage_remaining: "",
-        valid_until: "",
         file_url: "",
       });
       setCroppedImage(null);
@@ -373,14 +354,13 @@ const PhotoRecadree = () => {
     );
   };
 
-  const handleFileUpload = async (imageBlob) => {
+  const handleFileUpload = async (imageBlob, bucketName) => {
     return new Promise((resolve, reject) => {
       try {
-        // Using UUID for unique file naming
-        const uniqueFileName = `patient_records/${uuidv4()}.jpeg`;
-
+        const uniqueFileName = `${ocrbucket}/${uuidv4()}.jpeg`;
+  
         supabase.storage
-          .from("patient-records")
+          .from(ocrbucket)
           .upload(uniqueFileName, imageBlob, {
             contentType: "image/jpeg",
           })
@@ -389,9 +369,8 @@ const PhotoRecadree = () => {
               reject(error);
               return;
             }
-
-            // Construct the URL for the uploaded image
-            const imageUrl = `${supabaseUrl}/storage/v1/object/public/patient-records/${uniqueFileName}`;
+  
+            const imageUrl = `${supabaseUrl}/storage/v1/object/public/${ocrbucket}/${uniqueFileName}`;
             resolve(imageUrl);
           })
           .catch((error) => {
@@ -402,6 +381,7 @@ const PhotoRecadree = () => {
       }
     });
   };
+  
 
   return (
     <ChakraProvider>
