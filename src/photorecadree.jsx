@@ -38,7 +38,7 @@ const supabase = createClient(supabaseUrl, supabaseKey);
 const ImageCroppingStep = ({ onNextStep, onFileChange }) => {
   const [selectedFile, setSelectedFile] = useState(null);
   const [fileLoadError, setFileLoadError] = useState(null);
-  const rotateLeft = () => {
+const rotateLeft = () => {
     if (cropperRef.current) {
       cropperRef.current.cropper.rotate(-5);
     }
@@ -57,54 +57,64 @@ const ImageCroppingStep = ({ onNextStep, onFileChange }) => {
     const file = event.target.files[0];
     if (file) {
       setSelectedFile(file);
-      // Clear any previous error message
       setFileLoadError(null);
 
-      // Create a new Image object
       const img = new Image();
-
-      // Set an onload event handler to ensure the image is fully loaded
       img.onload = () => {
-        // The image has loaded successfully
-        // You can proceed with setting up the Cropper component
+        // Proceed with setting up the Cropper component
       };
-
-      // Handle image loading errors
       img.onerror = (error) => {
-        // Log the error to the console
         console.error("Image loading error:", error);
-
-        // Set an error message
-        setFileLoadError(
-          "Failed to load the image. Please select a valid image file."
-        );
-
-        // Clear the selected file and Cropper component if an error occurs
+        setFileLoadError("Failed to load the image. Please select a valid image file.");
         setSelectedFile(null);
         if (cropperRef.current) {
           cropperRef.current.destroy();
         }
       };
-
-      // Set the source of the image to the data URL
       img.src = URL.createObjectURL(file);
     }
   };
 
-  const handleCrop = () => {
+  const handleCrop = async () => {
     if (cropperRef.current) {
       const croppedCanvas = cropperRef.current.cropper.getCroppedCanvas();
       if (croppedCanvas) {
-        croppedCanvas.toBlob((blob) => {
-          const reader = new FileReader();
-          reader.onloadend = () => {
-            const dataUrl = reader.result;
-            onFileChange({ blob, dataUrl }); // Pass both blob and dataUrl
-          };
-          reader.readAsDataURL(blob);
+        croppedCanvas.toBlob(async (blob) => {
+          try {
+            const imageUrl = await handleFileUpload(blob);
+            onFileChange({ blob, imageUrl });
+            onNextStep(); // Move to the next step
+          } catch (error) {
+            console.error("Error uploading image:", error);
+            toast.error("Error uploading image. Please try again.");
+          }
         }, "image/jpeg");
       }
     }
+  };
+
+  const handleFileUpload = async (imageBlob) => {
+    return new Promise((resolve, reject) => {
+      try {
+        const uniqueFileName = `photos/${uuidv4()}.jpeg`;
+        supabase.storage
+          .from("ocrbucket")
+          .upload(uniqueFileName, imageBlob, { contentType: "image/jpeg" })
+          .then(({ error }) => {
+            if (error) {
+              reject(error);
+              return;
+            }
+            const imageUrl = `${supabaseUrl}/storage/v1/object/public/ocrbucket/${uniqueFileName}`;
+            resolve(imageUrl);
+          })
+          .catch((error) => {
+            reject(error);
+          });
+      } catch (error) {
+        reject(error);
+      }
+    });
   };
 
   const ordonnanceInputRef = useRef(null); // New ref for the ordonnance input
@@ -116,20 +126,20 @@ const ImageCroppingStep = ({ onNextStep, onFileChange }) => {
   return (
     <div>
       <FormControl pb={5} pt={5}>
-          <FormLabel>Fichier de l'ordonnance</FormLabel>
-          <Stack direction="row" align="center">
-            <Button leftIcon={<AiOutlineFileAdd />} colorScheme="blue" onClick={handleClickOrdonnance}>
-              Choisir un fichier ou prendre une photo
-            </Button>
-            <Input
-              ref={ordonnanceInputRef}
-              type="file"
-              onChange={handleFileChange}
-              hidden // Hide the default input
-            />
-          </Stack>
-        </FormControl>
-      {fileLoadError && ( // Display the error message if it exists
+        <FormLabel>Fichier de l'ordonnance</FormLabel>
+        <Stack direction="row" align="center">
+          <Button leftIcon={<AiOutlineFileAdd />} colorScheme="blue" onClick={handleClickOrdonnance}>
+            Choisir un fichier ou prendre une photo
+          </Button>
+          <Input
+            ref={ordonnanceInputRef}
+            type="file"
+            onChange={handleFileChange}
+            hidden // Hide the default input
+          />
+        </Stack>
+      </FormControl>
+      {fileLoadError && (
         <Alert status="error">
           <AlertIcon />
           {fileLoadError}
@@ -137,37 +147,15 @@ const ImageCroppingStep = ({ onNextStep, onFileChange }) => {
       )}
       {selectedFile && (
         <div>
-          <Box
-            display="flex"
-            justifyContent="center"
-            alignItems="center"
-            pb={5}
-          >
-            <Button
-              onClick={rotateLeft}
-              colorScheme="teal"
-              leftIcon={<ArrowBackIcon />}
-              m="5px"
-            >
+          <Box display="flex" justifyContent="center" alignItems="center" pb={5}>
+            <Button onClick={rotateLeft} colorScheme="teal" leftIcon={<ArrowBackIcon />} m="5px">
               Rotation
             </Button>
-
-            <Button
-              onClick={rotateRight}
-              colorScheme="teal"
-              rightIcon={<ArrowForwardIcon />}
-              m="5px"
-            >
+            <Button onClick={rotateRight} colorScheme="teal" rightIcon={<ArrowForwardIcon />} m="5px">
               Rotation
             </Button>
           </Box>
-          <Cropper
-            src={URL.createObjectURL(selectedFile)}
-            guides={true}
-            cropBoxMovable={true}
-            cropBoxResizable={true}
-            ref={cropperRef}
-          />
+          <Cropper src={URL.createObjectURL(selectedFile)} ref={cropperRef} />
           <Button onClick={handleCrop} colorScheme="teal" mx={2} m="5px">
             Accepter la photo recadrée
           </Button>
@@ -178,7 +166,8 @@ const ImageCroppingStep = ({ onNextStep, onFileChange }) => {
 };
 
 const PhotoRecadree = () => {
-  const [newPatient, setNewPatient] = useState(null);
+  const [newPatient, setNewPatient] = useState({
+    id: uuidv4(),   });
   const [userId, setUserId] = useState(null);
   const [uploadedImages, setUploadedImages] = useState([]);
   const uploadPhotosRef = useRef(null);
